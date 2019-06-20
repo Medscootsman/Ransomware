@@ -2,6 +2,7 @@ library(jsonlite)
 library(kernlab)
 library(caret)
 library(earth)
+library(keras)
 
 
 cardata <- read.csv("data/car_data.csv")
@@ -21,12 +22,13 @@ test <- cardata[-trainindex, ]
 
 #TRAIN DATASET
 
-fit <- ksvm(train)
+fit <- ksvm(aspiration~., train)
 
 
 print(fit)
 
-predictions <- predict(fit)
+predictions <- predict(fit, test)
 
 print(predictions)
+
 
