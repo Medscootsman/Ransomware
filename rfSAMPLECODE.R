@@ -6,9 +6,7 @@ table(data$NSP)
 
 # Data Partition
 set.seed(123)
-ind <- sample(2, nrow(data), replace = TRUE, prob = c(0.7, 0.3))
-train <- data[ind==1,]
-test <- data[ind==2,]
+
 
 # Random Forest
 library(randomForest)
@@ -62,3 +60,4 @@ getTree(rf, 1, labelVar = TRUE)
 
 # Multi-dimensional Scaling Plot of Proximity Matrix
 MDSplot(rf, train$NSP)
+
