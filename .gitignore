@@ -1,6 +1,6 @@
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
-.csv
-.pcap
+*.Rproj.user
+*.Rhistory
+*.RData
+*.Ruserdata
+*.csv
+*.pcap
