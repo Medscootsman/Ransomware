@@ -9,12 +9,17 @@ import codecs
 import requests
 import time
 
+#delete all files in httpdata, if any.
+
 #get all files in directory
 fileList = []
-pcaps = []
 
 requestCap = 150 #for certain APIs
 currentRequests = 0
+
+mypath = os.getcwd()
+
+print(mypath)
 
 #turns flags into a factor for the dataset
 def flagToFactor(flag):
@@ -34,130 +39,206 @@ def getIpGeoInfo(address):
     
     return jsondata
 
-fileList = [f for f in os.listdir(".") if (os.path.isfile(f))]
-print(fileList)
-
-for file in fileList:
-    if(file.endswith('.pcap') or file.endswith('.pcapng')):
-        pcaps.append(file)
-        print("pcap added")
-        
-print(pcaps)
-
-totalFiles = 1
-
-for pcap in pcaps:
-    totalFiles = totalFiles + 1
-    f = open(pcap, 'rb')
+def ParsePcapsHTTP(fileList, directory, label):
+    path = ""
+    totalFiles = 0
     
-    #check file is actually a pcap file
-    if(f.name.endswith("pcapng")):
-        pcap = dpkt.pcapng.Reader(f)
-        isFile = True
-    elif(f.name.endswith("pcap")):
-        pcap = dpkt.pcap.Reader(f)
-        isFile = True
-    else:
-        print("Not a pcap file")
-        isFile = False
-        
-    
-    if(isFile):    
-        http_data = [["type", "sourceIP", "destIP", "bytes", "sourceport", "method", "bodySize", "version", "uri", "uri_size", "agent", "version", "host", "sum", "flags"]]
-        
-        
-        for ts, buf in pcap:
-            eth = dpkt.ethernet.Ethernet(buf)
-            ip = eth.data
-            tcp = ip.data
+    for file in fileList:
+        if(file.endswith('.pcap') or file.endswith('.pcapng')):
+            path = str(mypath + directory + file)
+            print("pcap added")
+            print(path)
             
-            #print(dir(tcp))
-            #print(dir(ip))
-            #print(len(buf))
+            totalFiles = totalFiles + 1
+            f = open(path, 'rb')
             
-            try:
-                if(tcp.dport == 80):
-                    tsum = tcp.sum
+            #check file is actually a pcap file
+            if(f.name.endswith("pcapng")):
+                pcap = dpkt.pcapng.Reader(f)
+                isFile = True
+            elif(f.name.endswith("pcap")):
+                pcap = dpkt.pcap.Reader(f)
+                isFile = True
+            else:
+                print("Not a pcap file")
+                isFile = False
+                
+            
+            if(isFile):    
+                http_data = [["type", "sourceIP", "destIP", "bytes", "sourceport", "method", "bodySize", "version", "uri", "fileType", "uri_size", "agent", "version", "host", "hostLength", "onion", "comDomain", "sum", "flags", "tcpwin"]]
+                
+                
+                for ts, buf in pcap:
                     
-                    flag = tcp.flags
                     
-                    flagFactor = flagToFactor(flag)
-                    print(flagFactor)
+                    #print(dir(tcp))
+                    #print(dir(ip))
+                    #print(len(buf))
                     
-                    #get http object
-                    http = dpkt.http.Request(tcp.data)
-                    
-                    #get parameters
-                    
-                    method = http.method           
-                    body = http.body
-                    bodySize = len(body)
-                    version = http.version
-                    url = http.uri
-                    url_size = len(http.uri)
-                    
-                    #access headers
-                    headers = http.headers
-                    host = headers.get("host", "")
-                    hostLength = len(host)
-                    
-                    #print(url)
-                    agent = headers.get("user-agent", "")
-                    
-                    #assume agent is tor if no info provided
-                    if(agent == ""):
-                        agent = "TOR"
-                    
-                    #Get ip related information
-                    
-                    sourceIP = socket.inet_ntoa(ip.src)
-                    destinationIP = socket.inet_ntoa(ip.dst)
-                    
-                    #if(currentRequests == requestCap -1):
-                    #    print("REQUEST CAP REACHED, WAITING 1 MINUTE...")
-                    #    time.sleep(61)
+                    try:
+                        eth = dpkt.ethernet.Ethernet(buf)
+                        ip = eth.data
+                        tcp = ip.data
+                        tcpwin = tcp.win
+                        if(tcp.dport == 80):
+                            tsum = tcp.sum
+                            
+                            flag = tcp.flags
+                            
+                            #get http object
+                            if(dpkt.http.Request(tcp.data)):
+                                http = dpkt.http.Request(tcp.data)
+                                request = True
+                            else:
+                                http = dpkt.http.Response(tcp.data)
+                                dir(print(http))
+                                request = False
+                                
+                            flagFactor = flagToFactor(flag)
+                            print(flagFactor)                    
+                            
+                            #get parameters
+                            
+                            method = http.method           
+                            body = http.body
+                            bodySize = len(body)
+                            version = http.version
+                            url = http.uri
+                            fileurl = url.lower()
+                            
+                            #check if a file is being requested
+                            if(fileurl.endswith(".exe")):
+                                fileType = "Executable"
+                                
+                            elif(fileurl.endswith(".zip") or fileurl.endswith(".gz") or fileurl.endswith(".tar") or fileurl.endswith(".gzip")):
+                                fileType = "archive"
+                                
+                            elif(fileurl.endswith(".png") or fileurl.endswith(".jpg") or fileurl.endswith(".jpeg") or fileurl.endswith(".gif") or fileurl.endswith(".svg")):
+                                fileType = "image"
+                                
+                            elif(fileurl.endswith(".js")):
+                                fileType = "JavaScript"
+                                
+                            elif(fileurl.endswith(".css")):
+                                fileType = "StyleSheet"
+                                
+                            elif(fileurl.endswith(".ico")):
+                                fileType = "icon"
+                            
+                            elif(fileurl.endswith(".crx")):
+                                fileType = "Chrome Extension"
+                            
+                            elif(fileurl.endswith(".crl")):
+                                fileType = "Certificate revocation"
+                            
+                            elif(method == "POST"):
+                                fileType = "POST request"
+                            
+                            elif(fileurl.endswith(".txt")):
+                                fileType = "text file"
+                            
+                            elif(fileurl.endswith(".woff2")):
+                                fileType = "font file"
+                            
+                            elif(fileurl.endswith(".mp3") or fileurl.endswith(".ogg")):
+                                fileType = "audio"
+                            
+                            elif(fileurl.endswith(".mp4")):
+                                fileType = "video"
+                            
+                            elif(fileurl == "/"):
+                                fileType = "host site"
+                            
+                            else:
+                                fileType = "generic link"
+                                
+                            url_size = len(http.uri)
+                            
+                            #access headers
+                            headers = http.headers
+                            host = headers.get("host", "")
+                            
+                            if(host.endswith(".onion") or host.endswith(".onion.gz")):
+                                Onionland = True
+                            else:
+                                Onionland = False
+                                
+                            #also check if it's a .com domain or not. If it is, mark it as such.
+                            
+                            if(host.endswith(".com")):
+                                comDomain = True
+                            else:
+                                comDomain = False
+                                
+                            hostLength = len(host)
+                            
+                            #print(url)
+                            agent = headers.get("user-agent", "")
+                            
+                            #assume agent is tor if no info provided
+                            if(agent == ""):
+                                agent = "TOR"
+                            
+                            #Get ip related information
+                            
+                            sourceIP = socket.inet_ntoa(ip.src)
+                            destinationIP = socket.inet_ntoa(ip.dst)
+                            
+                            #if(currentRequests == requestCap -1):
+                            #    print("REQUEST CAP REACHED, WAITING 1 MINUTE...")
+                            #    time.sleep(61)
+                                
+                            #destinationCountry = json.get("country", "")
+                            
+                            #print(destinationCountry)
+        
+                            
+                            #get information about the destination
+                            byte = len(buf)
+                            sourcePort = tcp.sport
+                            
+                            #store parameters and append them to the data
+                            data = [label, sourceIP, destinationIP, byte, sourcePort, method, bodySize, version, url, fileType, url_size, agent, version, host, hostLength, Onionland, comDomain, tsum, flagFactor, tcpwin]
+                            
+                            http_data.append(data)
+                            
+                    except Exception as e:
+                        print(str(e))
                         
-                    #destinationCountry = json.get("country", "")
-                    
-                    #print(destinationCountry)
-
-                    
-                    #get information about the destination
-                    byte = len(buf)
-                    sourcePort = tcp.sport
-                    
-                    #store parameters
-                    data = ["malicious", sourceIP, destinationIP, byte, sourcePort, method, bodySize, version, url, url_size, agent, version, host, tsum, flagFactor]
-                    
-                    http_data.append(data)
-            except Exception as e:
-                print(str(e))
+                        
+                f.close()
                 
+                timestr = time.strftime("%Y%m%d-%H%M%S")
                 
-        f.close()
-        
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        
-        if(http_data is not None):
+                if(len(http_data) > 0):
+                    
+                    with open("http_traffic " + str(totalFiles) + timestr + ".csv", "w", newline='') as csvfile:
+                        writer = csv.writer(csvfile)
+                        csvname = csvfile.name
+                        for row in http_data:
+                            writer.writerow(row)
+                            
+                        csvfile.close()
+                        
+                    if(os.path.isdir("httpdata") == False):
+                        os.mkdir("httpdata")
+                
+                    shutil.move(csvname, "httpdata/" + csvname)
+                
+                    print("parsed " + csvname + " successfully")
+                else:
+                    print("No HTTP request traffic found")
+                
+            http_data = []
             
-            with open("http_traffic " + str(totalFiles) + timestr + ".csv", "w", newline='') as csvfile:
-                writer = csv.writer(csvfile)
-                csvname = csvfile.name
-                for row in http_data:
-                    writer.writerow(row)
-                    
-                csvfile.close()
-                
-            if(os.path.isdir("httpdata") == False):
-                os.mkdir("httpdata")
-        
-            shutil.move(csvname, "httpdata/" + csvname)
-        
-            print("parsed " + csvname + " successfully")
-        else:
-            print("No HTTP data found")
-        
-    http_data = []
+    print(str(totalFiles) + " files parsed")    
     
-print(totalFiles)
 
+fileListMal = [f for f in os.listdir(mypath + "\\pcaps_mal") if os.path.isfile(os.path.join(mypath + "\\pcaps_mal", f))]
+
+fileListBenign = [f for f in os.listdir(mypath + "\\pcaps_benign") if os.path.isfile(os.path.join(mypath + "\\pcaps_benign", f))]
+print(fileListMal)
+
+#parse each one
+ParsePcapsHTTP(fileListMal, "\\pcaps_mal\\", "Malicious")
+ParsePcapsHTTP(fileListBenign, "\\pcaps_benign\\", "Benign")
