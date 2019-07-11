@@ -4,30 +4,31 @@ library(caret)
 library(earth)
 library(keras)
 
+options(stringsAsFactors = TRUE)
 
 cardata <- read.csv("data/car_data.csv")
 
-carFrame <- data.frame(data)
+carFrame <- data.frame(cardata)
 
 sample = floor(0.70 * nrow(carFrame))
 
+carFrame$price = as.numeric(as.character(carFrame$price))
+
+carFrame$horsepower = as.numeric(as.character(carFrame$horsepower))
+
+
 set.seed(123)
 
-ind <- sample(2, nrow(cardata), replace = TRUE, prob = c(0.7, 0.3))
-train <- cardata[ind==1,]
-test <- cardata[ind==2,]
-
-train$price = as.numeric(train$price)
-
-train$horsepower = as.numeric(train$horsepower)
+ind <- sample(2, nrow(carFrame), replace = TRUE, prob = c(0.7, 0.3))
+train <- carFrame[ind==1,]
+test <- carFrame[ind==2,]
 
 str(train)
 
 library(randomForest)
 
-set.seed(222)
 
-rf <- randomForest(make~., data=train,
+rf <- randomForest(aspiration~., data=train,
                   ntree=1000,
                   mtry=8,
                   important=TRUE,
@@ -36,9 +37,11 @@ rf <- randomForest(make~., data=train,
 
 print(rf)
 
-p1 <- predict(rf, train)
+p1 <- predict(rf, test)
 
 plot(rf)
+
+plot(p1)
 
 #TRAIN DATASET
 
@@ -46,8 +49,5 @@ fit <- ksvm(aspiration~., train)
 
 print(fit)
 
-predictions <- predict(fit, test)
-
-print(predictions)
 
 
