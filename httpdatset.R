@@ -56,7 +56,7 @@ summary(train)
 levels(train$agent)
 
 #randomforest
-rf <- randomForest(data.type ~., data = train, na.action = na.exclude, ntree = 800, mtry = 8)
+rf <- randomForest(data.type ~., data = train, na.action = na.exclude, ntree = 500, mtry = 8)
 
 print(rf)
 
@@ -65,6 +65,8 @@ p1 <- predict(rf, newdata = test)
 rftable <- table(test$data.type, p1)
 
 print(rftable)
+
+plot(rf)
 
 #J48
 j48res <- J48(data.type~., train)
@@ -76,5 +78,14 @@ print(j48res)
 j48table <- table(test$data.type, test.pred)
 
 print(j48table)
-#naive bayes
 
+#adaboost
+#install.packages("adabag")
+library(adabag)
+
+adaboost <- boosting(data.type~., train, boos = TRUE, mfinal = 50)
+
+p3 <- predict(adaboost, test)
+
+
+print(p3$confusion)
