@@ -47,6 +47,7 @@ plot(p1)
 
 fit <- ksvm(aspiration~., train)
 
+
 print(fit)
 
 

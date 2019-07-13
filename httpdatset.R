@@ -13,6 +13,7 @@ library(earth)
 library(keras)
 library(caTools)
 library(RWeka)
+library(kernlab)
 
 #PREPARATION
 set.seed(123)
@@ -71,11 +72,11 @@ plot(rf)
 #J48
 j48res <- J48(data.type~., train)
 
-test.pred <- predict(j48res, newdata = test)
+p2 <- predict(j48res, newdata = test)
 
 print(j48res)
 
-j48table <- table(test$data.type, test.pred)
+j48table <- table(test$data.type, p2)
 
 print(j48table)
 
@@ -89,3 +90,31 @@ p3 <- predict(adaboost, test)
 
 
 print(p3$confusion)
+print(p3$error)
+
+
+
+#naive bayes
+#install.packages("e1071")
+library(e1071)
+naive <- naiveBayes(data.type~., train)
+
+p4 <-predict(naive, test)
+
+naiveTable <- table(p4, test$data.type)
+
+print(naiveTable)
+
+#ksvm
+ksvmfit <- ksvm(data.type~., train)
+
+p5 <- predict(naive, test)
+
+ksvmtable <- table(p5, test$data.type)
+
+print(ksvmtable)
+
+#export CSV
+write.csv(data, file = "dataExport.csv")
+
+
