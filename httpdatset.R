@@ -2,6 +2,7 @@
 #install.packages("readr")
 #install.packages("dplyr")
 #install.packages("iptools")
+#install.packages("partykit")
 library(plyr)
 library(readr)
 library(randomForest)
@@ -14,6 +15,7 @@ library(keras)
 library(caTools)
 library(RWeka)
 library(kernlab)
+library(partykit)
 
 #PREPARATION
 set.seed(123)
@@ -43,9 +45,11 @@ data$destIP <- iptools::ip_to_numeric(as.character(data$destIP))
 
 data$host <- as.numeric(data$host)
 
+data$tcpack <- as.numeric(as.character(data$tcpack))
+
 dataV2 <- data.frame(data$type, data$sourceIP, data$destIP, data$bytes, data$sourceport, data$method, data$bodySize, 
                      data$version, data$fileType, data$uri_size, data$agent, data$hostLength, data$onion, data$comDomain, 
-                     data$sum, data$flags, data$tcpwin)
+                     data$sum, data$flags, data$tcpwin, data$tcpack)
 
 
 ind <- sample(2, nrow(dataV2), replace = TRUE, prob = c(0.7, 0.3))
@@ -67,6 +71,10 @@ rftable <- table(test$data.type, p1)
 
 print(rftable)
 
+p1confusion <- confusionMatrix(p1, reference = test$data.type)
+
+print(p1confusion)
+
 plot(rf)
 
 #J48
@@ -79,6 +87,12 @@ print(j48res)
 j48table <- table(test$data.type, p2)
 
 print(j48table)
+
+p2confusion <- confusionMatrix(p2, reference = test$data.type)
+
+print(p2confusion)
+
+plot(j48res)
 
 #adaboost
 #install.packages("adabag")
@@ -93,7 +107,6 @@ print(p3$confusion)
 print(p3$error)
 
 
-
 #naive bayes
 #install.packages("e1071")
 library(e1071)
@@ -102,6 +115,14 @@ naive <- naiveBayes(data.type~., train)
 p4 <-predict(naive, test)
 
 naiveTable <- table(p4, test$data.type)
+
+trueneg <- naiveTable[1, "Benign"]
+
+falseneg <- naiveTable[1, "Malicious"]
+
+P4confusion <- confusionMatrix(p4, reference = test$data.type)
+
+print(p4confusion)
 
 print(naiveTable)
 
@@ -114,6 +135,9 @@ ksvmtable <- table(p5, test$data.type)
 
 print(ksvmtable)
 
+p5confusion <- confusionMatrix(p5, reference = test$data.type)
+
+print(p5confusion)
 #export CSV
 write.csv(data, file = "dataExport.csv")
 

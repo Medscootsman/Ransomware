@@ -65,37 +65,41 @@ def ParsePcapsHTTP(fileList, directory, label):
                 
             
             if(isFile):    
-                http_data = [["type", "sourceIP", "destIP", "bytes", "sourceport", "method", "bodySize", "version", "uri", "fileType", "uri_size", "agent", "version", "host", "hostLength", "onion", "comDomain", "sum", "flags", "tcpwin"]]
+                http_data = [["type", "sourceIP", "destIP", "bytes", "sourceport", "method", "bodySize", "version", "uri", "fileType", "uri_size", "agent", "version", "host", "hostLength", "onion", "comDomain", "sum", "flags", "tcpwin", "tcpack"]]
                 
                 
                 for ts, buf in pcap:
                     
                     
-                    #print(dir(tcp))
-                    #print(dir(ip))
+                    #print(dir(tcp))s
                     #print(len(buf))
-                    
                     try:
                         eth = dpkt.ethernet.Ethernet(buf)
                         ip = eth.data
                         tcp = ip.data
-                        tcpwin = tcp.win
+                        
+                        #print(dir(tcp))
+                        
                         if(tcp.dport == 80):
-                            tsum = tcp.sum
                             
+                            tsum = tcp.sum
+                            tcpwin = tcp.win
                             flag = tcp.flags
+                            ack = tcp.ack
+                            seq = tcp.seq
                             
                             #get http object
                             if(dpkt.http.Request(tcp.data)):
                                 http = dpkt.http.Request(tcp.data)
                                 request = True
+                                
                             else:
                                 http = dpkt.http.Response(tcp.data)
-                                dir(print(http))
                                 request = False
                                 
+                            
                             flagFactor = flagToFactor(flag)
-                            print(flagFactor)                    
+                            #print(flagFactor)                    
                             
                             #get parameters
                             
@@ -110,7 +114,7 @@ def ParsePcapsHTTP(fileList, directory, label):
                             if(fileurl.endswith(".exe")):
                                 fileType = "Executable"
                                 
-                            elif(fileurl.endswith(".zip") or fileurl.endswith(".gz") or fileurl.endswith(".tar") or fileurl.endswith(".gzip")):
+                            elif(fileurl.endswith(".zip") or fileurl.endswith(".gz") or fileurl.endswith(".tar") or fileurl.endswith(".gzip") or fileurl.endswith(".rar")):
                                 fileType = "archive"
                                 
                             elif(fileurl.endswith(".png") or fileurl.endswith(".jpg") or fileurl.endswith(".jpeg") or fileurl.endswith(".gif") or fileurl.endswith(".svg")):
@@ -128,7 +132,7 @@ def ParsePcapsHTTP(fileList, directory, label):
                             elif(fileurl.endswith(".crx")):
                                 fileType = "Chrome Extension"
                             
-                            elif(fileurl.endswith(".crl")):
+                            elif(fileurl.endswith(".crl") or fileurl.endswith(".cer") or fileurl.endswith(".crt") or fileurl.endswith(".pem") or fileurl.endswith(".cab")):
                                 fileType = "Certificate revocation"
                             
                             elif(method == "POST"):
@@ -149,8 +153,17 @@ def ParsePcapsHTTP(fileList, directory, label):
                             elif(fileurl == "/"):
                                 fileType = "host site"
                             
+                            elif(fileurl.endswith(".php")):
+                                fileType = "PHP backend"
+                            
+                            elif(fileurl.endswith(".aspx") or fileurl.endswith(".asp")):
+                                fileType = "ASP page"
+                            
+                            elif(file.url.endswith(".cgi")):
+                                fileType = "common gateway interface"
                             else:
-                                fileType = "generic link"
+                                fileType = "other"
+                            
                                 
                             url_size = len(http.uri)
                             
@@ -158,14 +171,14 @@ def ParsePcapsHTTP(fileList, directory, label):
                             headers = http.headers
                             host = headers.get("host", "")
                             
-                            if(host.endswith(".onion") or host.endswith(".onion.gz")):
+                            if(host.endswith(".onion") or host.endswith(".onion.gz") or host.endswith(".onion.to") or host.endswith(".onion.pet") or host.endswith(".onion.sh")):
                                 Onionland = True
                             else:
                                 Onionland = False
                                 
                             #also check if it's a .com domain or not. If it is, mark it as such.
                             
-                            if(host.endswith(".com")):
+                            if(host.endswith(".com") or host.endswith(".co.uk")):
                                 comDomain = True
                             else:
                                 comDomain = False
@@ -177,7 +190,7 @@ def ParsePcapsHTTP(fileList, directory, label):
                             
                             #assume agent is tor if no info provided
                             if(agent == ""):
-                                agent = "TOR"
+                                agent = "Hidden"
                             
                             #Get ip related information
                             
@@ -198,7 +211,7 @@ def ParsePcapsHTTP(fileList, directory, label):
                             sourcePort = tcp.sport
                             
                             #store parameters and append them to the data
-                            data = [label, sourceIP, destinationIP, byte, sourcePort, method, bodySize, version, url, fileType, url_size, agent, version, host, hostLength, Onionland, comDomain, tsum, flagFactor, tcpwin]
+                            data = [label, sourceIP, destinationIP, byte, sourcePort, method, bodySize, version, url, fileType, url_size, agent, version, host, hostLength, Onionland, comDomain, tsum, flagFactor, tcpwin, ack]
                             
                             http_data.append(data)
                             
@@ -212,7 +225,7 @@ def ParsePcapsHTTP(fileList, directory, label):
                 
                 if(len(http_data) > 0):
                     
-                    with open("http_traffic " + str(totalFiles) + timestr + ".csv", "w", newline='') as csvfile:
+                    with open(label + " http_traffic " + str(totalFiles) + timestr + ".csv", "w", newline='') as csvfile:
                         writer = csv.writer(csvfile)
                         csvname = csvfile.name
                         for row in http_data:
