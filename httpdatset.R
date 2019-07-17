@@ -231,4 +231,6 @@ print(p5confusion)
 #export CSV
 write.csv(data, file = "dataExport.csv")
 
+write.csv(resultsExport, file = "MLAresults.csv")
+
 
