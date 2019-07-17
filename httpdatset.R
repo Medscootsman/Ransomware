@@ -17,6 +17,8 @@ library(RWeka)
 library(kernlab)
 library(partykit)
 
+options(stringsAsFactors = TRUE)
+
 #PREPARATION
 set.seed(123)
 files <- list.files(path = "data/httpdata", pattern = "*.csv", full.names = TRUE)
@@ -92,7 +94,7 @@ recall <- truepos / (truepos + falseneg)
 
 fMeasure <- (2 * truepos) / (2 * truepos + falsepos + falseneg)
 
-resultsExport <- data.frame("MLA" = "RandomForest", )
+resultsExport <- data.frame("MLA" = "RandomForest", "Accuracy" = accuracy, "Precision" = precision, "Recall" = recall, "fMeasure" = fMeasure)
 
 #J48
 j48res <- J48(data.type~., train)
@@ -126,6 +128,10 @@ recall <- truepos / (truepos + falseneg)
 
 fMeasure <- (2 * truepos) / (2 * truepos + falsepos + falseneg)
 
+d <- data.frame("MLA" = "J48", "Accuracy" = accuracy, "Precision" = precision, "Recall" = recall, "fMeasure" = fMeasure)
+
+resultsExport <- rbind(resultsExport, d)
+
 #adaboost
 #install.packages("adabag")
 library(adabag)
@@ -149,6 +155,10 @@ precision <- truepos / (truepos + falsepos)
 recall <- truepos / (truepos + falseneg)
 
 fMeasure <- (2 * truepos) / (2 * truepos + falsepos + falseneg)
+
+d <- data.frame("AdaboostM1" = "J48", "Accuracy" = accuracy, "Precision" = precision, "Recall" = recall, "fMeasure" = fMeasure)
+
+resultsExport <- rbind(resultsExport, d)
 
 #naive bayes
 #install.packages("e1071")
@@ -182,6 +192,10 @@ fMeasure <- (2 * truepos) / (2 * truepos + falsepos + falseneg)
 
 print(naiveTable)
 
+d <- data.frame("MLA" = "naive bayes", "Accuracy" = accuracy, "Precision" = precision, "Recall" = recall, "fMeasure" = fMeasure)
+
+resultsExport <- rbind(resultsExport, d)
+
 #ksvm
 ksvmfit <- ksvm(data.type~., train)
 
@@ -208,6 +222,9 @@ recall <- truepos / (truepos + falseneg)
 
 fMeasure <- (2 * truepos) / (2 * truepos + falsepos + falseneg)
 
+d <- data.frame("MLA" = "ksvm", "Accuracy" = accuracy, "Precision" = precision, "Recall" = recall, "fMeasure" = fMeasure)
+
+resultsExport <- rbind(resultsExport, d)
 
 print(p5confusion)
 
