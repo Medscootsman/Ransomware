@@ -77,6 +77,23 @@ print(p1confusion)
 
 plot(rf)
 
+#calculating the important stuff
+trueneg <- p1confusion$table["Benign", "Benign"]
+truepos <- p1confusion$table["Malicious", "Malicious"]
+
+falsepos <- p1confusion$table["Malicious", "Benign"]                        
+falseneg <- p1confusion$table["Benign", "Malicious"]
+
+accuracy <- (truepos + trueneg) / (truepos + trueneg + falsepos + falseneg)
+
+precision <- truepos / (truepos + falsepos)
+
+recall <- truepos / (truepos + falseneg)
+
+fMeasure <- (2 * truepos) / (2 * truepos + falsepos + falseneg)
+
+resultsExport <- data.frame("MLA" = "RandomForest", )
+
 #J48
 j48res <- J48(data.type~., train)
 
@@ -94,6 +111,21 @@ print(p2confusion)
 
 plot(j48res)
 
+#calculating the important stuff
+trueneg <- p2confusion$table["Benign", "Benign"]
+truepos <- p2confusion$table["Malicious", "Malicious"]
+
+falsepos <- p2confusion$table["Malicious", "Benign"]                        
+falseneg <- p2confusion$table["Benign", "Malicious"]
+
+accuracy <- (truepos + trueneg) / (truepos + trueneg + falsepos + falseneg)
+
+precision <- truepos / (truepos + falsepos)
+
+recall <- truepos / (truepos + falseneg)
+
+fMeasure <- (2 * truepos) / (2 * truepos + falsepos + falseneg)
+
 #adaboost
 #install.packages("adabag")
 library(adabag)
@@ -103,9 +135,20 @@ adaboost <- boosting(data.type~., train, boos = TRUE, mfinal = 50)
 p3 <- predict(adaboost, test)
 
 
-print(p3$confusion)
-print(p3$error)
+#calculating the important stuff
+trueneg <- p3$confusion["Benign", "Benign"]
+truepos <- p3$confusion["Malicious", "Malicious"]
 
+falsepos <- p3$confusion["Malicious", "Benign"]                        
+falseneg <- p3$confusion["Benign", "Malicious"]
+
+accuracy <- (truepos + trueneg) / (truepos + trueneg + falsepos + falseneg)
+
+precision <- truepos / (truepos + falsepos)
+
+recall <- truepos / (truepos + falseneg)
+
+fMeasure <- (2 * truepos) / (2 * truepos + falsepos + falseneg)
 
 #naive bayes
 #install.packages("e1071")
@@ -118,15 +161,24 @@ naiveTable <- table(p4, test$data.type)
 
 trueneg <- naiveTable[1, "Benign"]
 
-falseneg <- naiveTable[1, "Malicious"]
-
-truepos <- naiveTable[2, "Malicious"]
-
-falsepos <- naiveTable[2, "Benign"]
-
 P4confusion <- confusionMatrix(p4, reference = test$data.type)
 
 print(P4confusion)
+
+#calculating the important stuff
+trueneg <- p4confusion$table["Benign", "Benign"]
+truepos <- p4confusion$table["Malicious", "Malicious"]
+
+falsepos <- p4confusion$table["Malicious", "Benign"]                        
+falseneg <- p4confusion$table["Benign", "Malicious"]
+
+accuracy <- (truepos + trueneg) / (truepos + trueneg + falsepos + falseneg)
+
+precision <- truepos / (truepos + falsepos)
+
+recall <- truepos / (truepos + falseneg)
+
+fMeasure <- (2 * truepos) / (2 * truepos + falsepos + falseneg)
 
 print(naiveTable)
 
@@ -141,7 +193,24 @@ print(ksvmtable)
 
 p5confusion <- confusionMatrix(p5, reference = test$data.type)
 
+#calculating the important stuff
+trueneg <- p5confusion$table["Benign", "Benign"]
+truepos <- p5confusion$table["Malicious", "Malicious"]
+
+falsepos <- p5confusion$table["Malicious", "Benign"]                        
+falseneg <- p5confusion$table["Benign", "Malicious"]
+
+accuracy <- (truepos + trueneg) / (truepos + trueneg + falsepos + falseneg)
+
+precision <- truepos / (truepos + falsepos)
+
+recall <- truepos / (truepos + falseneg)
+
+fMeasure <- (2 * truepos) / (2 * truepos + falsepos + falseneg)
+
+
 print(p5confusion)
+
 #export CSV
 write.csv(data, file = "dataExport.csv")
 
