@@ -120,9 +120,13 @@ trueneg <- naiveTable[1, "Benign"]
 
 falseneg <- naiveTable[1, "Malicious"]
 
+truepos <- naiveTable[2, "Malicious"]
+
+falsepos <- naiveTable[2, "Benign"]
+
 P4confusion <- confusionMatrix(p4, reference = test$data.type)
 
-print(p4confusion)
+print(P4confusion)
 
 print(naiveTable)
 
