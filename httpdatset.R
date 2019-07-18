@@ -156,7 +156,7 @@ recall <- truepos / (truepos + falseneg)
 
 fMeasure <- (2 * truepos) / (2 * truepos + falsepos + falseneg)
 
-d <- data.frame("AdaboostM1" = "J48", "Accuracy" = accuracy, "Precision" = precision, "Recall" = recall, "fMeasure" = fMeasure)
+d <- data.frame("MLA" = "AdaboostM1", "Accuracy" = accuracy, "Precision" = precision, "Recall" = recall, "fMeasure" = fMeasure)
 
 resultsExport <- rbind(resultsExport, d)
 
