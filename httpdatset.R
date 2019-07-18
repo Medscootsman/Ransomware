@@ -3,6 +3,7 @@
 #install.packages("dplyr")
 #install.packages("iptools")
 #install.packages("partykit")
+#install.packages("e1071")
 library(plyr)
 library(readr)
 library(randomForest)
@@ -15,6 +16,7 @@ library(keras)
 library(caTools)
 library(RWeka)
 library(kernlab)
+library(e1071)
 library(partykit)
 
 options(stringsAsFactors = TRUE)
@@ -73,7 +75,7 @@ rftable <- table(test$data.type, p1)
 
 print(rftable)
 
-p1confusion <- confusionMatrix(p1, reference = test$data.type)
+p1confusion <- caret::confusionMatrix(p1, reference = test$data.type)
 
 print(p1confusion)
 
@@ -176,11 +178,11 @@ P4confusion <- confusionMatrix(p4, reference = test$data.type)
 print(P4confusion)
 
 #calculating the important stuff
-trueneg <- p4confusion$table["Benign", "Benign"]
-truepos <- p4confusion$table["Malicious", "Malicious"]
+trueneg <- P4confusion$table["Benign", "Benign"]
+truepos <- P4confusion$table["Malicious", "Malicious"]
 
-falsepos <- p4confusion$table["Malicious", "Benign"]                        
-falseneg <- p4confusion$table["Benign", "Malicious"]
+falsepos <- P4confusion$table["Malicious", "Benign"]                        
+falseneg <- P4confusion$table["Benign", "Malicious"]
 
 accuracy <- (truepos + trueneg) / (truepos + trueneg + falsepos + falseneg)
 
@@ -199,7 +201,7 @@ resultsExport <- rbind(resultsExport, d)
 #ksvm
 ksvmfit <- ksvm(data.type~., train)
 
-p5 <- predict(naive, test)
+p5 <- predict(ksvmfit, test)
 
 ksvmtable <- table(p5, test$data.type)
 
