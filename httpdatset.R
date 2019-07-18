@@ -233,4 +233,3 @@ write.csv(data, file = "dataExport.csv")
 
 write.csv(resultsExport, file = "MLAresults.csv")
 
-
