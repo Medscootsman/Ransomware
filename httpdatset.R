@@ -4,6 +4,7 @@
 #install.packages("iptools")
 #install.packages("partykit")
 #install.packages("e1071")
+#install.packages("ISLR")
 library(plyr)
 library(readr)
 library(randomForest)
@@ -18,6 +19,7 @@ library(RWeka)
 library(kernlab)
 library(e1071)
 library(partykit)
+library(ISLR)
 
 options(stringsAsFactors = TRUE)
 
@@ -230,8 +232,59 @@ resultsExport <- rbind(resultsExport, d)
 
 print(p5confusion)
 
+#bagging
+bagfit <- bagging(formula = data.type~., data=train, coob=TRUE)
+
+print(bagfit)
+
+p8 <- predict(bagfit, test)
+
+#calculating the important stuff
+trueneg <- p8$confusion["Benign", "Benign"]
+truepos <- p8$confusion["Malicious", "Malicious"]
+
+falsepos <- p8$confusion["Malicious", "Benign"]                        
+falseneg <- p8$confusion["Benign", "Malicious"]
+
+accuracy <- (truepos + trueneg) / (truepos + trueneg + falsepos + falseneg)
+
+precision <- truepos / (truepos + falsepos)
+
+recall <- truepos / (truepos + falseneg)
+
+fMeasure <- (2 * truepos) / (2 * truepos + falsepos + falseneg)
+
+d <- data.frame("MLA" = "Bagging", "Accuracy" = accuracy, "Precision" = precision, "Recall" = recall, "fMeasure" = fMeasure)
+
+resultsExport <- rbind(resultsExport, d)
+
 #export CSV
 write.csv(data, file = "dataExport.csv")
 
 write.csv(resultsExport, file = "MLAresults.csv")
 
+
+#WIP Algorithms
+#CART
+install.packages("rpart")
+library(rpart)
+
+cartfit <- rpart(data.type~., train, method = "class")
+
+p6 <- predict(cartfit, test)
+
+plotcp(cartfit)
+
+plot(cartfit)
+
+#gradient boosting
+install.packages("gbm")
+library(gbm)
+
+gbmModel <- gbm(formula = data.type~., 
+                distribution = "gaussian",
+                data=train,
+                n.trees = 1000)
+
+p7 <- predict(gbmModel, test, n.trees = 1000, type = "response")
+print(p7)
