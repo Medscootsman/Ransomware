@@ -144,7 +144,6 @@ adaboost <- boosting(data.type~., train, boos = TRUE, mfinal = 50)
 
 p3 <- predict(adaboost, test)
 
-
 #calculating the important stuff
 trueneg <- p3$confusion["Benign", "Benign"]
 truepos <- p3$confusion["Malicious", "Malicious"]
@@ -172,8 +171,6 @@ naive <- naiveBayes(data.type~., train)
 p4 <-predict(naive, test)
 
 naiveTable <- table(p4, test$data.type)
-
-trueneg <- naiveTable[1, "Benign"]
 
 P4confusion <- confusionMatrix(p4, reference = test$data.type)
 
